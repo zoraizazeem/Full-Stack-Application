@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <title>Enter the time</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <style>
+        body, html {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            background-color: paleturquoise;
+          }
+
+          .container {
+            width: 100%;
+            height: 100%;
+          }
+
+          .leftpane {
+              width: 30%;
+              height: 100%;
+              float: left;
+              background-color: paleturquoise;
+              border-collapse: collapse;
+              color: white;
+          }
+
+          .middlepane {
+              width: 40%;
+              height: 100%;
+              float: left;
+              background-color: paleturquoise;
+              border-collapse: collapse;
+          }
+
+
+          #special.rightpane {
+            width: 30%;
+            height: 100%;
+            position: relative;
+            float: right;
+            background-color: paleturquoise;
+            border-collapse: collapse;
+            color: white;
+          }
+
+          .toppane {
+            width: 100%;
+            height: 100px;
+            border-collapse: collapse;
+            background-color: #4da6ff;
+          }
+          .centered {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+        }
+        
+        .centered img {
+          width: 150px;
+          
+        }
+        input[type="text"]{ padding: 10px 10px; line-height: 5px; }
+
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    </head>
+    <body>
+
+      <div class = "container">
+        <h1 class= "title">Enter The Time</h2>
+        <div class="leftpane">
+          <p id = "welcometxt" class= "subtitle is-6"></p>
+        </div>
+        <div class = "middlepane">
+            <div class="centered">
+              <img src="alarmclock.png" alt="check clipart"  style="width:330px;height:200px;" >
+              <h3 class= "title">Work On Todays Activities</h3>
+              <select id ="acts">
+              </select>
+              <br><br>
+              <input type="text" id="timelogged" required minlength="4" maxlength="8" size="3">
+              <button onclick="timlogged()" class="button is-dark">
+                Log
+              </button>
+              <p> Click here to see your weekly activites <br>
+                and to log some times.</p>
+            </div>
+          </div>
+          <div class ="rightpane" id ="special">
+            <span id="buttonAppear"></span>
+          </div>
+        </div>
+
+
+        <script>
+
+          /*new date is initialised and can be retrieved with direct text is extracted from the index of the created array.*/
+          const WeekDyLst = ["placeholder", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+          var d = new Date();
+          var n = d.getDay();
+          var m = d.toDateString();
+
+
+          /* a welcoming sentence is then published to on the page*/
+          var WelcomingSent = `Hi, \n how productive have \n you been this ${WeekDyLst[n]}?`
+          
+          document.getElementById("welcometxt").innerHTML = WelcomingSent;
+          /*this is variable exercsises is initialised to hold the objects of the various dates and the timesd the user
+          has looged for each of the preset activities. There is an initial check for the existense of said variable only
+          showing the devop the result in console.  */
+          var exercises = []
+
+          
+          /*below within the functions janitor and bouncer the csv with the preset schedule (as csv). data is cleaned
+          and all null and undefined values are removed. These are then placed within the lists of "times" and "chars"*/
+          const times = []
+          const chars = []
+          async function janitor() {
+                const response = await fetch('sched.csv');
+                const data = await response.text();
+
+                const rows = data.split('\n').slice(1);
+                console.log(rows);
+                for (var i = 0; i<rows.length; i++) {
+                    chars.push(rows[i].split(',')[0])
+                    times.push(parseInt(rows[i].split(',')[1]))     
+                }
+                function bouncer(arr) {
+                    function filterer(arr) {
+                        return arr > 0|| isNaN(arr) === true;
+                    }
+                    arr = arr.filter(filterer);
+                    return arr;
+                }
+                bouncer(chars);
+                bouncer(times);
+
+                /*These schedule lists activites (now in chars list) is placed into the exercise object list with the
+                current date and as the name of the object. The keys of this object being the activites and the values, 
+                are set to zero.*/
+              
+                if(JSON.parse(localStorage.getItem(m)) == null){
+                  exercises[m] = {}
+                  for(var i = 0; i<rows.length; i++){
+                    exercises[m][chars[i]] = 0;
+                  }
+                  console.log("hi first time you have opened the app today");
+                } else {
+                  exercises[m] = JSON.parse(localStorage.getItem(m));
+                  console.log("welcome back (not first time you have opened the app today)")
+                }
+
+            };
+
+          
+          let counter = 0
+          var selectList = document.getElementById("acts");
+          
+          /*below the variable "makeSelect()" populates the select box on the page with the values of the object. Allowing user
+          to select activity and not type.*/
+          async function makeSelect(){
+            await janitor();
+            for (var i =0; i< chars.length; i++){
+              var option = document.createElement("option");
+              console.log(chars[i])
+              option.value = chars[i];
+              option.text = chars[i];
+              selectList.appendChild(option);
+            }
+          }
+
+          makeSelect();
+          
+          
+          var onlyOnce = 1;
+          var todayact = [];
+          
+          /*This is the on button press fucntion, i.e. submit time. A number of things occur here, as the input from user is 
+          stored and placed into the new "exercises" object and */ 
+          function timlogged(){
+            var temper1 = document.getElementById("timelogged").value;
+            var e = document.getElementById("acts");
+            var temper2 = e.options[e.selectedIndex].text;
+            
+            counter++
+            onlyOnce--
+            console.log(counter)
+            
+            exercises[m][temper2] = parseFloat(exercises[m][temper2]) + parseFloat(temper1)
+            console.log(exercises)
+            
+            /*localStorage.setItem('today', `${temper2}`, `${temper1}`);*/
+            var timer = document.createElement('div');
+            timer.id = `toremove${counter}`;
+            
+            sessionStorage.setItem(`${counter}`, `${temper2+ ' ' +temper1}`)
+
+            if(onlyOnce ==0){
+              timer.innerHTML = `You have added ${temper2} for ${temper1} hours.`;
+            } else {
+              timer.innerHTML = `& ${temper2} for ${temper1} hours.`;
+            }
+            document.getElementById('special').appendChild(timer);
+            document.getElementById("buttonAppear").innerHTML = '<button id="clear" class = "button is-dark" onclick = "btnFunc()">Remove</button>';
+            
+            localStor()
+          }
+          
+          function localStor(){
+            localStorage.setItem(m , JSON.stringify(exercises[m]));
+            console.log(localStorage);
+          }
+
+          var removecount = 0
+          function btnFunc(){
+            
+            if(counter > removecount){
+              
+              removecount++
+              onlyOnce++
+              console.log(removecount)
+              var willremove = sessionStorage.getItem(removecount);
+              var rem = willremove.split(' ');
+              exercises[m][rem[0]] = parseFloat(exercises[m][rem[0]]) - parseFloat(rem[1])
+              localStor()
+
+              var elem = document.getElementById(`toremove${removecount}`)
+              var txtdiv = elem.textContent
+      
+              console.log(willremove)
+              elem.remove();
+            }
+            
+          }          
+
+
+        </script>
+          
+
+    </body>
+</html>
+
+
+

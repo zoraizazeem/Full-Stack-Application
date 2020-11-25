@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <style>
+        </style>
+        <title> Previous History</title>
+
+    </head>
+    <body>
+        <br>
+        <h1 class= "title">  
+            <strong> Are You On Track? </strong>
+
+        </h1>
+
+        
+    <script>
+        const API_URL = 'http://localhost:5000/history'
+        const times = []
+        const chars = []
+        async function janitor() {
+            const response = await fetch('sched.csv');
+            const data = await response.text();
+            const rows = data.split('\n').slice(1);
+            console.log(rows);
+            for (var i = 0; i<rows.length; i++) {
+                chars.push(rows[i].split(',')[0])
+                times.push(parseInt(rows[i].split(',')[1]))
+                }
+            function bouncer(arr) {
+                function filterer(arr) {
+                    return arr > 0|| isNaN(arr) === true;
+                }
+                arr = arr.filter(filterer);
+                return arr;
+            }
+            bouncer(chars);
+            bouncer(times);
+        };
+        janitor()
+        
+        /*var data = {
+            labels: ["Chocolate", "Vanilla", "Strawberry"],
+            datasets: [
+                {
+                    label: "Blue",
+                    backgroundColor: "blue",
+                    data: [3,7,4]
+                },
+                {
+                    label: "Red",
+                    backgroundColor: "red",
+                    data: [4,3,5]
+                },
+                {
+                    label: "Green",
+                    backgroundColor: "green",
+                    data: [7,2,6]
+                }
+            ]
+        };*/
+
+        /*var myBarChart = new Chart(ctx, {
+            type: 'bar',
+            data: data,
+            options: {
+                barValueSpacing: 20,
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            min: 0,
+                        }
+                    }]
+                }
+            }
+        });*/
+
+
+
+        fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            //var res = JSON.parse(data)
+            var res = data[0]["Sat Nov 07 2020"];
+            var res = JSON.parse(res)
+            console.log(data)
+            console.log(res)
+            delete data[0]._id
+            let labelList = Object.keys(data[0])
+            console.log(labelList)
+            /*var data = {
+            labels: labelList,
+            datasets: [
+                {
+                    label: "Blue",
+                    backgroundColor: "blue",
+                    data: [3,7,4]
+                },
+                {
+                    label: "Red",
+                    backgroundColor: "red",
+                    data: [4,3,5]
+                },
+                {
+                    label: "Green",
+                    backgroundColor: "green",
+                    data: [7,2,6]
+                }
+                ]
+            };*/
+        })
+
+    </script>
+
+    </body>
+</html>

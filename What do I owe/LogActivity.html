@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Log New Activity</title>
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <style>
+    
+        body {
+          
+          color: white;
+          font-size: 30px;
+        }
+        table {
+            border: 3px solid rgb(0, 6, 39);
+            width: 100%;
+        }
+
+        th, td {
+            border: 3px solid rgb(0, 6, 39);
+          text-align: left;
+          padding: 8px;
+        }
+
+
+
+        th {
+          background-color:rgb(103, 219, 194);
+          color: white;
+        }
+
+        .split {
+          height: 100%;
+          width: 50%;
+          position: fixed;
+          z-index: 1;
+          top: 0;
+          overflow-x: hidden;
+          padding-top: 20px;
+        }
+        
+        .left {
+          left: 0;
+          background-color: rgb(24, 142, 189);
+        }
+
+        .lock{
+            width: 25%
+        }
+        .a{
+            order: 1;
+             
+        }
+
+        .b{
+            order:2;
+        }
+
+        .c{
+            order:3;
+             
+        }
+
+        .d{
+            order:4;
+        }
+
+        .right {
+          right: 0;
+          background-color: rgb(77, 88, 192);
+        }
+        
+        .centered {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          text-align: center;
+        }
+        
+        input[type=text] {
+            width: 80%;
+            padding: 12px 30px;
+            
+            display: inline-block;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+     
+
+  </head>
+
+  <body>
+
+    <script>
+        let counter = 0
+        localStorage.setItem("amountm", "0")
+            function addNewVal(){
+                var temper1 = document.getElementById("activity").value;
+                var temper2 = document.getElementById("timeforact").value;
+                counter++
+                localStorage.setItem(`iowe${counter}`, `${temper1}`)
+                localStorage.setItem(`amounth${counter}`, `${temper2}`)
+                console.log(localStorage)
+
+            }
+
+
+
+
+            const times = []
+            const chars = []
+            async function janitor() {
+                const response = await fetch('sched.csv');
+                const data = await response.text();
+
+                const rows = data.split('\n').slice(1);
+                console.log(rows);
+                for (var i = 0; i<rows.length; i++) {
+                    chars.push(rows[i].split(',')[0])
+                    times.push(parseInt(rows[i].split(',')[1]))     
+                }
+                function bouncer(arr) {
+                    function filterer(arr) {
+                        return arr > 0|| isNaN(arr) === true;
+                    }
+                    arr = arr.filter(filterer);
+                    return arr;
+                }
+                bouncer(chars);
+                bouncer(times);
+                console.log(times)
+                console.log(chars)
+           
+            };
+        
+    </script>
+
+<div class="split left"> 
+    <p id="doublecheck" onclick="buttonFunction()"></p>
+    <span id="buttonAppear"></span>
+    <div class ="centered"> 
+    <div class="a">
+    <label>Activity</label>
+
+    </div>
+    <div class="b">
+        <input type="text" id= "activity" required
+        minlength="4" maxlength="8" size="10">
+    </div>
+
+    <div class="c">
+        <label >Time (in hours)</label>
+    </div>
+
+    <div class="d"> 
+    
+    <input type="text" id="timeforact" required minlength="4" maxlength="8" size="10">
+    <br>
+    <br>
+    <button onclick="newValue()" class="button is-dark">
+        Log
+    </button>
+    </div>
+</div>
+</div>
+
+<div class = "split right"> 
+    <span id="tableAppear"></span>
+    <table>
+        
+    </table>
+    <p class ="rusure"> Im going to disapear</p>
+</div>
+
+    <script>
+        function newValue() {
+            if (document.getElementById("activity").value.length !==0) {
+                var fep = document.getElementById("activity").value;
+                var sep = document.getElementById("timeforact").value;
+                document.getElementById("doublecheck").innerHTML = `Are you sure you want to add ${fep} for ${sep} hours?`;
+            }
+        }
+
+        function buttonFunction(){
+            document.getElementById("buttonAppear").innerHTML = '<button class="lock"  onclick="secondFunction()">Yes!!!</button>';
+        }
+        
+        function secondFunction(){
+            document.getElementById("buttonAppear").innerHTML = '<span id="buttonAppear"></span>'
+            document.getElementById("doublecheck").innerHTML = '<span id ="doublecheck"></span>'
+            addNewVal()
+
+
+        }
+
+        function Maker(times, activity){
+                this.TimesInHours = times;
+                this.Activity = activity;
+            }
+
+
+        const finalList = []
+            async function tableMaker(){
+                await janitor();
+            for (var i =0; i<chars.length; i++){
+                finalList.push(new Maker(times[i], chars[i]))    
+            }
+            console.log(finalList)
+        }
+    </script>
+    <script>
+        function generateTableHead(table, data) {
+        let thead = table.createTHead();
+        let row = thead.insertRow();
+        for (let key of data) {
+            let th = document.createElement("th");
+            let text = document.createTextNode(key);
+            th.appendChild(text);
+            row.appendChild(th);
+        };
+    }
+
+        function generateTable(table, data) {
+        for (let element of data) {
+        let row = table.insertRow();
+        for (key in element) {
+          let cell = row.insertCell();
+          let text = document.createTextNode(element[key]);
+          cell.appendChild(text);
+        };
+      };
+    }
+    waitTurn();
+
+    async function waitTurn(){
+        await tableMaker();
+        let table = document.querySelector("table");
+        let data = Object.keys(finalList[0]);
+        generateTable(table, finalList);
+        generateTableHead(table, data);
+    }
+    </script>
+ 
+  </body>
+
+</html>

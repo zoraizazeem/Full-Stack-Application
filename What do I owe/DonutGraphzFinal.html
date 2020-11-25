@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <title>Your status</title>
+        <meta charset="utf-8"/>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+        <script src = https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+        <style>
+            body {
+                
+                background-color: whitesmoke;
+            }
+            h1{
+                color: white
+            }
+            h2{
+                color:white
+            }
+            .donutchart{
+                display: inline-block;
+            }
+
+
+        </style>
+    </head>
+
+    <body>
+        <br>
+        <h1 class= "title">  
+            <strong> What Do I Owe? </strong>
+
+        </h1>
+        <h2 id="welcometxt" class ="subtitle is-6"></h2>   
+        <br>
+        
+        <div  id ="forchart" horizontal layout> 
+        </div>
+        <div class="columns is-vcentered">
+            <div class="column">
+                <div class ="box has-text-centered"> 
+                            <button class = "button is-large is-primary" onclick= "openFunc('EnterTime.html')" >Log Activity</button>
+                </div>            
+            </div> 
+            <div class="column"> 
+                <div class ="box has-text-centered">      
+                            <button class = "button is-large is-primary" onclick= "openFunc('LogActivity.html')" > Change Program</button>
+                        </div>             
+            </div>        
+            <div class="column">  
+                <div class ="box has-text-centered">  
+                            <button class = "button is-large is-primary" onclick="openFunc('HomePage.html')"> Go back</button>
+                </div>              
+            </div>
+            <div class="column">  
+                <div class ="box has-text-centered">  
+                            <button class = "button is-large is-primary" onclick="putInDB()"> Put In DataBase</button>
+                </div>              
+            </div>           
+        </div>
+
+        <script>
+
+            const API_URL = 'http://localhost:5000/week'
+
+            var newList = [];
+
+            const WeekDyLst = ["placeholder", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+            var d = new Date();
+            var n = d.getDay();
+            var m = d.toDateString();
+
+            var WelcomingSent = `Hi, \n how productive have \n you been this ${WeekDyLst[n]}?`
+            document.getElementById("welcometxt").innerHTML = WelcomingSent;
+
+            const times = []
+            const chars = []
+            async function janitor() {
+                const response = await fetch('sched.csv');
+                const data = await response.text();
+                const rows = data.split('\n').slice(1);
+                console.log(rows);
+                for (var i = 0; i<rows.length; i++) {
+                    chars.push(rows[i].split(',')[0])
+                    times.push(parseInt(rows[i].split(',')[1]))
+                    }
+                function bouncer(arr) {
+                    function filterer(arr) {
+                        return arr > 0|| isNaN(arr) === true;
+                    }
+                    arr = arr.filter(filterer);
+                    return arr;
+                }
+                bouncer(chars);
+                bouncer(times);
+            };
+
+
+            
+            
+             function drawChart(el2, el3, el4, el5, el6) {
+                    new Chart(document.getElementById(el2).getContext('2d'), {
+                        type: 'doughnut',
+                        data: {
+                            labels: [el3, el4],
+                            datasets: [{
+                                label: '# of Votes',
+                                data: [el5 - el6, el6],
+                                backgroundColor: [
+                                    'rgba(229, 68, 19, 1)',
+                                    'rgba(63, 191, 99, 1)',
+                                ],
+                            }]
+                        }, 
+                        options: {
+                            responsive: false,
+                            legend: {
+                                labels: {
+                                    fontColor: "gray",
+                                    fontSize: 18
+                                    
+                                }
+                            },
+                            hoverBackgroundColor: "black",
+                            hoverBorderColor: "white",
+                            borderColor: "#cc65fe"
+                        }
+
+                    });
+                }
+                
+            async function formCharts(){
+                await janitor();
+
+                // below the local storage is emptied to get the values compiled in the Enter Time form. Here
+                //the values are JSON parsed and then pushed into a newList.  LSEntry is the local storage entries.
+                var LSEntry = Object.entries(localStorage);
+                for(var i=0; i<LSEntry.length; i++){
+                    newList.push(JSON.parse(LSEntry[i][1]))
+                }
+                //console.log(newList)
+
+                //Then the values provided by each individual day are summed to form the weekly values.
+                function sumObjectsByKey(objs) {
+                  return objs.reduce((a, b) => {
+                    for (let k in b) {
+                      if (b.hasOwnProperty(k))
+                        a[k] = (a[k] || 0) + b[k];
+                    }
+                    return a;
+                  }, {});
+                }
+                var weekList = sumObjectsByKey(newList);
+                
+                //console.log(JSON.stringify(weekList));
+                //console.log(weekList);
+
+                for(var i = 0; i < times.length; i++) {
+                    let div = document.createElement('div');
+                    let canvas = document.createElement('canvas');
+                    div.className = "donutchart";
+                    div.appendChild(canvas);
+                    canvas.id = `myDoughnutChart${i}`;
+                    document.getElementById("forchart").appendChild(div);
+                    if(times[i] > weekList[chars[i]]){
+                        drawChart(`myDoughnutChart${i}`, ` ${chars[i]}-time to complete`, `${chars[i]}-time completed`, times[i], weekList[chars[i]]);
+                    }else{
+                        drawChart(`myDoughnutChart${i}`, ` ${chars[i]}-time to complete`, `${chars[i]}-time completed`, weekList[chars[i]], weekList[chars[i]])
+                    }
+                }
+
+
+                if(newList.length > 7){
+                    putInDB();
+                    console.log("a full week");
+                    localStorage.clear();
+                }else{
+                    console.log("not a whole week");
+                }
+            }
+
+            formCharts()
+            function openFunc(ent) {
+                window.open(ent);
+            }
+
+            function putInDB(){
+                fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify(localStorage),
+                        headers : {
+                            'content-type' : 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(createdObj => {
+                        console.log(createdObj)
+                    }) 
+            }
+        </script>
+ 
+    </body>
+
+</html>
