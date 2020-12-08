@@ -5,6 +5,7 @@
 This is my "What do I owe?" application.
 This application consists of the front and backend, i.e. the UI and the dynamic server.
 
+I experimented with interactive data representation (donut graphs) using the JavaScript programming language. Data is stored in local stirage and session storage so check your browser compatibility on https://www.w3schools.com/html/html5_webstorage.asp
 
 This is a productivity application.
 I use this personally to record the amount of work I have done for each of the categories I have allotted myself. (i.e. business, work, exercise etc.) 
